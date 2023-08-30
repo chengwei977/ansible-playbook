@@ -1,5 +1,3 @@
-# ansible-playbook
-
 # 功能说明
 
 ## 操作系统配置
