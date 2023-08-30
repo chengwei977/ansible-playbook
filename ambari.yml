@@ -1,7 +1,7 @@
 ---
 
 # 运行样例： ansible-playbook /opt/ansible-playbook/ansible-playbook-ambari/ambari.yml
-# author: wade
+# author: a506488046@163.com
 # date: 20230822
 # funtion: 离线自动化部署ambari-server/ambari-agent
 # 版本要求：
@@ -75,10 +75,10 @@
       MySQLConfDir: /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/configFiles
       driverDir: /usr/share/java
     password:
-      mysql: Xunce_2018
-      ambari: Xunce_2018
-      hive: Xunce_2018
-      hue: Xunce_2018
+      mysql: Passwd_2018
+      ambari: Passwd_2018
+      hive: Passwd_2018
+      hue: Passwd_2018
     packages:
       mysql_driver: mysql-connector-java-5.1.46.jar
       #mysql_server: mysql-5.7.43-el7-x86_64.tar.gz
