@@ -1,0 +1,114 @@
+---
+
+# 运行样例： ansible-playbook /opt/ansible-playbook/ansible-playbook-ambari/ambari.yml
+# author: wade
+# date: 20230822
+# funtion: 离线自动化部署ambari-server/ambari-agent
+# 版本要求：
+# OS: Redhat7.9/CentOS7.9(仅支持该操作系统版本)
+# ambari-2.7.6.0-4
+# MySQL 5.7+/Python3+
+# 
+
+
+- hosts: master
+  gather_facts: F
+  vars:
+    local_ambari_os_yum_repo: hdp3-node1
+    paths:
+      AmbariDir: /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/Ambari
+      HDPDir: /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/HDP
+      
+      scriptsDir: /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/Scripts
+      autoDeployConfDir: /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/configFiles
+      ambari_repository: /var/ftp/ambari/centos7 #解压ambari-2.7.6.0-4-centos7_8-x86_64.tar.gz之后mv -i /opt/2.7.6.0-4 /opt/ambari
+      hdp_repository: /var/www/html/HDP
+      hdp_utils_repository: /var/www/html/HDP-UTILS
+
+    packages:
+      #java: jdk-8u261-linux-x64.tar.gz
+      #mysql_driver: mysql-connector-java-5.1.46.jar
+      ambari_pkg: ambari-2.7.6.0-4-centos7_8-x86_64.tar.gz
+      hdp_pkg: HDP-3.3.1.0-004-centos7_8-x86_64.tar.gz
+      hdp_utils: HDP-UTILS-1.1.0.22-centos7_8-x86_64.tar.gz
+      vsftpd_pkg: vsftpd-3.0.2-28.el7.x86_64.rpm
+      other_ntp_server_conf: ntp-server.conf
+  remote_user: root
+
+  tasks:
+    - include: ./component/init_pkg_env.yml #解压ambari/hdp包并放置于相应的目录
+    #- include: ./component/setup_system_env.yml #关闭防火墙、selinux以及禁止开机启动
+    #- include: ./component/setup_java_env.yml #设置JAVA_HOME
+    - include: ./component/setup_local_repo.yml #安装vsftpd/httpd,并创建本地操作系统yum源和本地ambari的yum源
+    - include: ./component/yum_install_ntp_server_env.yml
+    #- include: ./component/setup_python3_env.yml #安装Python3和libtirpc包
+    #- include: ./component/setup_mysql_server.yml #安装MySQL并设置账号密码
+
+- hosts: all_node
+  gather_facts: F
+  vars:
+    local_ambari_os_yum_repo: hdp3-node1
+    paths:
+      scriptsDir: /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/Scripts
+      JDKDir: /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/JDK
+      rpmPackageDir: /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/rpmPackages
+      JAVA_HOME_PATH: /usr/java
+      #JAVA_HOME_PATH: /usr/java/jdk1.8.0_261
+    packages:
+      jdk: jdk-8u261-linux-x64.tar.gz
+      vsftpd_pkg: vsftpd-3.0.2-28.el7.x86_64.rpm
+      other_rpm_pkg: libtirpc-devel-0.2.4-0.16.el7.x86_64.rpm
+  tasks:
+    - include: ./component/setup_system_env.yml #关闭防火墙、selinux以及禁止开机启动、创建相关目录
+    - include: ./component/setup_java_env.yml  #设置JAVA_HOME
+    - include: ./component/setup_master_repo.yml #删除/备份本地仓库的repo并拷贝hdp3-node1的本地仓库至/etc/yum.repos.d
+    - include: ./component/yum_install_python3_env.yml #安装Python3和libtirpc包
+  remote_user: root
+
+- hosts: master
+  gather_facts: F
+  vars:
+    local_ambari_os_yum_repo: hdp3-node1
+    paths:
+      MySQLDir: /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/MySQL
+      MySQLInstallScriptDir: /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/Scripts
+      MySQLConfDir: /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/configFiles
+      driverDir: /usr/share/java
+    password:
+      mysql: Xunce_2018
+      ambari: Xunce_2018
+      hive: Xunce_2018
+      hue: Xunce_2018
+    packages:
+      mysql_driver: mysql-connector-java-5.1.46.jar
+      #mysql_server: mysql-5.7.43-el7-x86_64.tar.gz
+  remote_user: root
+
+  tasks:
+    - include: ./component/setup_mysql_server.yml  #创建用户解压MySQL包于/usr/local/mysql、MySQL初始化、修改root密码
+    - include: ./component/yum_install_ambari_server.yml #安装Ambari-server
+    #- include: ./component/setup_mysql_ambari_ddl.yml #执行ambari-server ddl脚本/var/lib/ambari-server/resources/Ambari-DDL-MySQL-CREATE.sql
+    #- include: ./component/yum_install_ambari_agent.yml #安装Ambari-agent的server配置
+
+- hosts: slave
+  gather_facts: F
+  vars:
+    local_ambari_os_yum_repo: hdp3-node1
+    paths:
+      ntpClientDir: /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/configFiles
+    packages:
+      other_ntp_client_conf: ntp-client.conf
+  remote_user: root
+  tasks:
+    - include: ./component/yum_install_ntp_client_env.yml  #设置非master节点的ntp时钟同步,需要初始化该配置文件
+    #- include: ./component/yum_install_ambari_agent.yml #设置ambari-agent的server配置
+
+- hosts: master
+  gather_facts: F
+  vars:
+    paths:
+      ScriptsDir: /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/Scripts
+  remote_user: root
+  tasks:
+    - include: ./component/setup_ambari_server.yml #启动ambari-server
+    #- include: ./component/setup_ambari_agent.yml #启动ambari-agent
