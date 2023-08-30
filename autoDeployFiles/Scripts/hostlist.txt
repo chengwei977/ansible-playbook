@@ -1,0 +1,3 @@
+hdp3-node1 123456
+hdp3-node2 123456
+hdp3-node3 123456
