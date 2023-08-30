@@ -1,0 +1,18 @@
+---
+  - name: 拷贝rpm包
+    copy: src={{paths.rpmPackageDir}}/{{packages.other_rpm_pkg}} dest={{paths.rpmPackageDir}}/tmp/
+
+  - name: 安装libtirpc包
+    yum:
+      name: libtirpc
+      state: present
+
+  - name: 安装libtirpc-devel包
+    yum:
+      name: "{{paths.rpmPackageDir}}/tmp/{{packages.other_rpm_pkg}}"
+      state: present
+  
+  - name: 安装Python3
+    yum:
+      name: python3
+      state: present

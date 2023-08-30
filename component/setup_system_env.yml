@@ -1,0 +1,18 @@
+---
+  - name: 关闭防火墙并禁止开机启动、关闭selinux
+    shell: systemctl stop firewalld && systemctl disable firewalld && sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config && setenforce 0
+
+  - name: 创建JDK所需临时目录
+    file:
+      path: "{{paths.JDKDir}}/tmp"
+      state: directory
+      mode: '0755'
+
+  - name: 创建存放rpm包临时目录
+    file:
+      path: "{{paths.rpmPackageDir}}/tmp"
+      state: directory
+      mode: '0755'
+
+  - name: 拷贝JDK至相关目录
+    copy: src={{paths.JDKDir}}/{{packages.jdk}} dest={{paths.JDKDir}}/tmp

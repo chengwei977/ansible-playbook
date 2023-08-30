@@ -1,1 +1,21 @@
+---
+  - name: 创建相关目录
+    file:
+      path: "{{paths.ambari_repository}}"
+      state: directory
+      mode: '0755'
 
+  - name: 解压ambari-server包
+    unarchive: src="{{paths.AmbariDir}}/{{packages.ambari_pkg}}" dest="{{paths.ambari_repository}}"
+
+  - name: 创建目录/var/www/html
+    file:
+      path: /var/www/html/HDP/centos7
+      state: directory
+      mode: '0755'
+
+  #- name: 解压HDP包
+  #  unarchive: src="{{paths.HDPDir}}/{{packages.hdp_pkg}}" dest=/var/www/html/HDP/centos7
+
+  - name: 解压HDPUTILS包
+    unarchive: src="{{paths.HDPDir}}/{{packages.hdp_utils}}" dest=/var/www/html/

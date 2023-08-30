@@ -1,0 +1,12 @@
+---
+  - name: 创建相关JAVA_HOME目录
+    file:
+      path: /usr/java
+      state: directory
+      mode: '0755'
+
+  - name: 解压jdk包
+    unarchive: src={{paths.JDKDir}}/tmp/{{packages.jdk}} dest={{paths.JAVA_HOME_PATH}}
+
+  - name: 设置/etc/profile的JAVA_HOME与PATH变量
+    shell: if [ `grep JAVA_HOME /etc/profile > /dev/null 2>&1;echo $?` -ne 0 ]; then echo "export JAVA_HOME={{paths.JAVA_HOME_PATH}}/jdk1.8.0_261" >> /etc/profile && source /etc/profile && echo "export PATH=$PATH:$JAVA_HOME/bin" >> /etc/profile ; fi

@@ -1,0 +1,19 @@
+---
+  #- name: 安装vsftpd包
+  #  yum:
+  #    name: "{{paths.rpmPackageDir}}/{{vsftpd_pkg}}"
+  #    state: present
+  
+  #- name: 配置vsftpd匿名登录以及HOME目录
+  #  shell: echo "anon_root=/opt" >> /etc/vsftpd/vsftpd.conf
+
+  #- name: 启动vsftpd服务
+  #  shell: systemctl start vsftpd
+
+  - name: 配置本地操作系统与ambari的yum源
+    shell: sh {{paths.scriptsDir}}/create_ambari_server_repo.sh {{local_ambari_os_yum_repo}}
+
+  - name: 安装httpd服务
+    yum:
+      name: httpd
+      state: present

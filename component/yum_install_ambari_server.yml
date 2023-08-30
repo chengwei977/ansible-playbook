@@ -1,0 +1,24 @@
+---
+  - name: 安装Ambari Server服务
+    yum:
+      name: ambari-server
+      state: present
+
+  - name: 创建mysql driver的目录/usr/share/java
+    file:
+      path: /usr/share/java
+      state: directory
+ 
+  - name: 复制mysql-driver包至/usr/share/java
+    copy: src={{paths.MySQLDir}}/{{packages.mysql_driver}} dest=/usr/share/java
+
+  - name: 初始化Ambar server元数据
+    shell: mysql -uambari -p{{password.ambari}} ambari < /var/lib/ambari-server/resources/Ambari-DDL-MySQL-CREATE.sql
+
+  - name: 设置Ambari Server
+    shell: sh {{paths.MySQLInstallScriptDir}}/ambari_setup.sh 3306 {{password.ambari}} /usr/java/jdk1.8.0_261 {{local_ambari_os_yum_repo}} /usr/share/java/{{packages.mysql_driver}} && source /etc/profile
+
+  - name: 安装ambari agent
+    yum:
+      name: ambari-agent
+      state: present

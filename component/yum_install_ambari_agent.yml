@@ -1,0 +1,8 @@
+---
+  - name: 安装ambari agent
+    yum:
+      name: ambari-agent
+      state: present
+
+  - name: 配置ambar agent
+    shell: sed -i 's/hostname=.*/hostname="'{{local_ambari_os_yum_repo}}'"/g' /etc/ambari-agent/conf/ambari-agent.ini

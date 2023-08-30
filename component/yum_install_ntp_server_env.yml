@@ -1,0 +1,8 @@
+---
+  - name: 安装ntp时钟同步服务
+    yum:
+      name: ntp
+      state: present
+
+  - name: 配置时钟同步源
+    copy: src={{paths.autoDeployConfDir}}/{{packages.other_ntp_server_conf}} dest=/etc/ntp.conf

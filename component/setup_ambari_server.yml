@@ -1,0 +1,6 @@
+---
+  - name: 修改ambari连接MySQL的参数
+    shell: sh {{paths.ScriptsDir}}/modifyAmbarProperties.sh
+
+  - name: 启动ambari
+    shell: systemctl start ambari-server 

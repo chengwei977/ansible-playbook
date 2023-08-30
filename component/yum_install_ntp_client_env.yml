@@ -1,0 +1,19 @@
+---
+  - name: 创建配置文件所需目录
+    file:
+      path: "{{paths.ntpClientDir}}"
+      state: directory
+
+  - name: 安装ntp服务
+    yum:
+      name: ntp
+      state: present
+
+  - name: 拷贝配置文件
+    copy: src={{paths.ntpClientDir}}/{{packages.other_ntp_client_conf}} dest={{paths.ntpClientDir}}/
+
+  - name: 配置slave节点同步ntp server
+    shell: sed -i 's/server 127.127.1.0/server "'{{local_ambari_os_yum_repo}}'"/g' {{paths.ntpClientDir}}/{{packages.other_ntp_client_conf}}
+
+  - name: 生效配置并检查
+    shell: systemctl restart ntpd && ntpq -p
