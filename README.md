@@ -1,17 +1,46 @@
 # ansible-playbook
 
-这个ansible-playbook主要是实现ambari-server以及配置相关agent端的jdk、ntp和ambari源等的自动化。
+# 功能说明
 
-使用前有以下须知：
+## 操作系统配置
 
-1、目前版本我个人仅在centos7.9上进行过部署和测试，其他版本不敢保证能正常使用；
+操作系统层面主要完成防火墙、selinux等的自动关闭，但是生产过程中应该还需要修改/etc/security/limits.conf中的用户资源限制（本次并没有去做这个配置的修改，后续会考虑加进去）、自动配置免密、自动配置/etc/hosts、自动配置/etc/ansible/hosts。
 
-2、由于是离线部署，需要依赖操作系统镜像中的一些包，所以需提前准备好，如有第三方源也可以考虑修改autoDeployAmbari.sh中制作本地yum源这部分逻辑以及component中setup_local_repo\setup_master_repo中注释create_ambari_server_repo.sh这个脚本相关的行为；
+## 相关软件环境的配置
 
-3、由于github的限制，我并没有上传jdk、hdp、mysql相关的包上来。后续抽空我会上传到百度云，需要的可自行下载。
+软件环境的配置主要完成自动配置：
+
+1、JAVA_HOME\PATH等环境变量，并添加至/etc/profile；
+
+2、ntp时钟同步；
+
+3、本地yum源；（需要在ambari-server节点连接iso镜像文件至/dev/cdrom，如默认连接该设备的路径在其他地方，需要修改autoDeployAmbari.sh脚本中的相关路径）
+
+4、自动安装MySQL、创建hive、hue、ambari等数据库以及初始化MySQL相关账号的密码。（密码的定义在ambari.yml中，可自行修改）
+
+# 使用须知
+
+## 环境
+
+**操作系统：centos7.9**
+
+**Python3：3.6.8**
+
+**MySQL: 5.7.30**
+
+# 部署方式
+
+## 离线部署
+
+该自动化工具为离线部署，即在不依赖外部互联网的情况下完成部署。
+
+
+
+由于github的限制，并没有上传jdk、hdp、mysql相关的包。在ambari.yml中有定义相关包的版本，可以自行获取或者修改相关版本并放置于相关目录。
+
+
 
 用法上需要人工配置以下几处：
-
 1）下载这个包之后解压上传至准备作为ambari-server节点的服务器中的/opt/目录，结构如下：
 
 [root@hdp3-node1 ansible-playbook-ambari]# ll
@@ -25,14 +54,12 @@ drwxr-xr-x. 2 root root   4096 8月  28 16:13 component
 /opt/ansible-playbook/ansible-playbook-ambari
 
 2）人工配置autoDeployFiles/Scripts/hostlist.txt，将所有作为ambari-server\ambari-agent节点的服务器主机名与密码填写好，用于制作ambari-server节点的单向免密ssh远程root用户访问ambari-agent节点。
-
 例如：
 hdp3-node1 123456
 hdp3-node2 123456
 hdp3-node3 123456
 
 3）人工配置autoDeployFiles/Scripts/temphosts.txt，填写好所有ambari-server\ambari-agent节点的ip、hostname映射关系
-
 例如：
 192.168.0.1 hdp3-node1
 192.168.0.2 hdp3-node2
@@ -42,8 +69,11 @@ hdp3-node3 123456
 
 
 
-[root@hdp3-node1 ansible-playbook-ambari]# sh autoDeployAmbari.sh 
+另外说明一下：部署完ambari-server并且成功启动之后，在安装HDP hue服务的过程中，会提示缺失python2-psycopg2依赖包，hidataplus有提供，大家可以去百度网盘获取。
 
+
+
+[root@hdp3-node1 ansible-playbook-ambari]# sh autoDeployAmbari.sh 
 已加载插件：fastestmirror
 正在检查 /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/Scripts//../rpmPackages/vsftpd-3.0.2-28.el7.x86_64.rpm: vsftpd-3.0.2-28.el7.x86_64
 /opt/ansible-playbook/ansible-playbook-ambari/autoDeployFiles/Scripts//../rpmPackages/vsftpd-3.0.2-28.el7.x86_64.rpm 将被安装
@@ -104,8 +134,11 @@ Loading mirror speeds from cached hostfile
 --> 正在检查事务
 ---> 软件包 tcl.x86_64.1.8.5.13-8.el7 将被 安装
 --> 解决依赖关系完成
+
 依赖关系解决
+
 ==================================================================================================================================================================================================================
+
  Package                                         架构                                            版本                                                       源                                               大小
 
 正在安装:
@@ -121,7 +154,9 @@ Loading mirror speeds from cached hostfile
 安装大小：4.9 M
 Downloading packages:
 (1/2): expect-5.45-14.el7_1.x86_64.rpm                                                                                                                                                     | 262 kB  00:00:00     
+
 (2/2): tcl-8.5.13-8.el7.x86_64.rpm                                                                                                                                                         | 1.9 MB  00:00:00     
+
 总计                                                                                                                                                                               15 MB/s | 2.1 MB  00:00:00     
 Running transaction check
 Running transaction test
@@ -448,4 +483,4 @@ hdp3-node1                 : ok=56   changed=42   unreachable=0    failed=0    s
 hdp3-node2                 : ok=21   changed=21   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 hdp3-node3                 : ok=21   changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 
-[root@hdp3-node1 ansible-playbook-ambari]#)
+[root@hdp3-node1 ansible-playbook-ambari]#
