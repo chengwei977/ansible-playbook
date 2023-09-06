@@ -687,4 +687,4 @@ hdp3-node2                 : ok=21   changed=21   unreachable=0    failed=0    s
 
 hdp3-node3                 : ok=21   changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 
-[root@hdp3-node1 ansible-playbook-ambari]#)
+[root@hdp3-node1 ansible-playbook-ambari]#
